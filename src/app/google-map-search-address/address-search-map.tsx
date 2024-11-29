@@ -13,24 +13,36 @@ if (!GOOGLE_MAPS_API_KEY) {
   console.error('Google Maps API key is missing. Please set the NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.')
 }
 
-const mapContainerStyle = {
+const mapContainerStyle: React.CSSProperties = {
   width: '100%',
-  height: '400px'
+  height: '400px',
 }
 
 const defaultCenter = {
-  lat: 40.7128,
-  lng: -74.0060
+  lat: 50.8477,
+  lng: 4.3572,
+}
+
+// Type definitions for selected location and suggestion
+interface SelectedLocation {
+  address: string
+  lat: number
+  lng: number
+}
+
+interface Suggestion {
+  description: string
+  place_id: string
 }
 
 export default function AddressSearchMap() {
-  const [address, setAddress] = useState('')
-  const [suggestions, setSuggestions] = useState([])
-  const [selectedLocation, setSelectedLocation] = useState(null)
-  const autocompleteService = useRef(null)
-  const placesService = useRef(null)
+  const [address, setAddress] = useState<string>('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null)
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null)
+  const placesService = useRef<google.maps.places.PlacesService | null>(null)
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setAddress(value)
 
@@ -38,8 +50,15 @@ export default function AddressSearchMap() {
       autocompleteService.current.getPlacePredictions(
         { input: value },
         (predictions, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
-            setSuggestions(predictions)
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setSuggestions(
+              predictions.map((prediction) => ({
+                description: prediction.description,
+                place_id: prediction.place_id,
+              }))
+            )
+          } else {
+            setSuggestions([])
           }
         }
       )
@@ -48,18 +67,18 @@ export default function AddressSearchMap() {
     }
   }
 
-  const handleSelectAddress = (placeId) => {
+  const handleSelectAddress = (placeId: string) => {
     if (placesService.current) {
       placesService.current.getDetails(
-        { placeId: placeId },
+        { placeId },
         (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
             setSelectedLocation({
-              address: place.formatted_address,
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng()
+              address: place.formatted_address || '',
+              lat: place.geometry?.location?.lat() || 0,
+              lng: place.geometry?.location?.lng() || 0,
             })
-            setAddress(place.formatted_address)
+            setAddress(place.formatted_address || '')
             setSuggestions([])
           }
         }
@@ -67,13 +86,13 @@ export default function AddressSearchMap() {
     }
   }
 
-  const onMapLoad = useCallback((map) => {
+  const onMapLoad = useCallback((map: google.maps.Map) => {
     autocompleteService.current = new google.maps.places.AutocompleteService()
     placesService.current = new google.maps.places.PlacesService(map)
   }, [])
 
   return (
-    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={['places']}>
+    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places']}>
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle>Address Search and Map</CardTitle>
@@ -111,7 +130,7 @@ export default function AddressSearchMap() {
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
               center={selectedLocation || defaultCenter}
-              zoom={selectedLocation ? 15 : 10}
+              zoom={selectedLocation ? 15 : 5}
               onLoad={onMapLoad}
             >
               {selectedLocation && (
@@ -124,4 +143,3 @@ export default function AddressSearchMap() {
     </LoadScript>
   )
 }
-

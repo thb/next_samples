@@ -8,7 +8,8 @@ export default function Home() {
           <li><a href="/google-map-search-address">Google Map Search Address</a></li>
           <li><a href="/osm-map-search-address">OpenStreetMap Map Search Address</a></li>
           <li><a href="/simple-map">Simple Map</a></li>
-          <li><a href="/mapbox-map-search-address">Mapbox Map Search Address</a></li>
+          <li><a href="/nace-codes-selector">NACE Code Selector</a></li>
+          <li><a href="/textile-form">Textile Form</a></li>
         </ul>
       </main>
     </div>

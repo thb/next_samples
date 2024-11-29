@@ -3,8 +3,7 @@ import AddressSearchMap from "./address-search-map";
 
 export default async function Page() {
   return (
-    <div>
-      <h1>Sample Page</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <AddressSearchMap />
     </div>
   )
